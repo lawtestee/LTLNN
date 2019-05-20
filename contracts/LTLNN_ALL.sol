@@ -2,23 +2,6 @@ pragma solidity ^0.5.8;
 
 
 /**
- * @title ERC20 interface
- */
-interface ERC20 {
-    function totalSupply() external view returns (uint256);
-
-    function balanceOf(address who) external view returns (uint256);
-
-    function transfer(address to, uint256 value) external returns (bool);
-
-    event Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 value
-    );
-}
-
-/**
  * @title SafeMath
  * @dev Math operations with safety checks that revert on error
  */
@@ -79,18 +62,45 @@ contract Ownable {
     }
 }
 
+
+
+/**
+ * @title ERC20 interface
+ */
+interface ERC20 {
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address who) external view returns (uint256);
+    function allowance(address tokenOwner, address spender) public view returns (uint remaining);
+    function transfer(address to, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function approve(address spender, uint256 value) external returns (bool);
+
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 value
+    );
+
+    event Approval(
+        address indexed tokenOwner,
+        address indexed spender,
+        uint256 value
+    );
+}
+
 contract LTLNN is ERC20, Ownable {
     using SafeMath for uint256;
 
     string public name = "Lawtest Token";
     string public symbol ="LTLNN";
-    uint256 public decimals = 2;
+    uint8  public decimals = 2;
 
-    uint256 initialSupply = 5000000;    // 50000.00
+    uint256 initialSupply = 5000000;
     uint256 saleBeginTime = 1557187200; // 7 May 2019, 0:00:00 GMT
     uint256 saleEndTime = 1557273600;   // 8 May 2019, 0:00:00 GMT
     uint256 tokensDestructTime = 1711929599;  // 31 March 2024, 23:59:59 GMT
     mapping (address => uint256) private _balances;
+    mapping (address => mapping(address => uint)) _allowed;
     uint256 private _totalSupply;
     uint256 private _amountForSale;
 
@@ -134,6 +144,48 @@ contract LTLNN is ERC20, Ownable {
         _transfer(msg.sender, to, amount);
         emit Transfer(msg.sender, to, amount);
         return true;
+    }
+
+    /**
+        * Token owner can approve for `spender` to transferFrom(...) `value`
+        * from the token owner's account
+        *
+        * https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
+        * recommends that there are no checks for the approval double-spend attack
+        * as this should be implemented in user interfaces
+        */
+    function approve(address spender, uint256 value) external returns (bool) {
+        _allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    /**
+        * Transfer `tokens` from the `from` account to the `to` account
+        *
+        * The calling account must already have sufficient tokens approve(...)-d
+        * for spending from the `from` account and
+        * - From account must have sufficient balance to transfer
+        * - Spender must have sufficient allowance to transfer
+        * - 0 value transfers are allowed
+        */
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        require(to != address(0));
+        require(value <= _balances[from]);
+        require(value <= _allowed[from][msg.sender]);
+        _balances[from] = _balances[from].sub(value);
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+        _balances[to] = _balances[to].add(value);
+        emit Transfer(from, to, value);
+        return true;
+    }
+
+    /**
+        * Returns the amount of tokens approved by the owner that can be
+        * transferred to the spender's account
+        */
+    function allowance(address tokenOwner, address spender) public view returns (uint256 remaining) {
+        return _allowed[tokenOwner][spender];
     }
 
     /**
