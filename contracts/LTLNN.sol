@@ -1,4 +1,4 @@
-﻿pragma solidity ^0.5.6;
+﻿pragma solidity ^0.5.8;
 
 import "./ERC20.sol";
 import "./SafeMath.sol";
@@ -9,12 +9,12 @@ contract LTLNN is ERC20, Ownable {
 
     string public name = "Lawtest Token";
     string public symbol ="LTLNN";
-    uint256 public decimals = 2;
+    uint8  public decimals = 2;
 
     uint256 initialSupply = 5000000;
-    uint256 saleBeginTime = 1553558400; // 26 March 2019 г., 0:00:00 GMT
-    uint256 saleEndTime = 1553644800;   // 26 March 2019 г., 0:00:00 GMT
-    uint256 tokensDestructTime = 1554076799;  // 31 March 2024 г., 23:59:59 GMT
+    uint256 saleBeginTime = 1557187200; // 7 May 2019, 0:00:00 GMT
+    uint256 saleEndTime = 1557273600;   // 8 May 2019, 0:00:00 GMT
+    uint256 tokensDestructTime = 1711929599;  // 31 March 2024, 23:59:59 GMT
     mapping (address => uint256) private _balances;
     uint256 private _totalSupply;
     uint256 private _amountForSale;
